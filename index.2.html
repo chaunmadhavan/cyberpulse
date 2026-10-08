@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBERPULSE // Quantum Luxury Electronics</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            dark: '#050508',
+                            card: '#0f1019',
+                            neon: '#00f0ff',
+                            purple: '#7000ff',
+                            pink: '#ff007f',
+                            accent: '#39ff14'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome & Three.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@500;600;700&display=swap');
+        
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: #050508;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .glass-panel {
+            background: rgba(15, 16, 25, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .neon-glow {
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.6), 0 0 20px rgba(0, 240, 255, 0.3);
+        }
+
+        .neon-border {
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.25), inset 0 0 15px rgba(0, 240, 255, 0.1);
+        }
+
+        .neon-border:hover {
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.6), inset 0 0 20px rgba(0, 240, 255, 0.25);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #050508;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #00f0ff;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="selection:bg-cyber-neon selection:text-black">
+
+    <canvas id="bg-canvas"></canvas>
+
+    <header class="fixed top-0 left-0 right-0 z-50 glass-panel border-b border-cyber-neon/20 px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('store')">
+            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-cyber-neon to-cyber-purple flex items-center justify-center neon-border animate-pulse">
+                <i class="fa-solid fa-microchip text-black text-xl font-bold"></i>
+            </div>
+            <span class="font-orbitron text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyber-neon via-white to-cyber-purple neon-glow">
+                CYBERPULSE
+            </span>
+        </div>
+
+        <nav class="hidden md:flex space-x-8 font-semibold text-lg">
+            <button onclick="switchTab('store')" id="nav-store" class="text-cyber-neon transition-all hover:text-white pb-1 border-b-2 border-cyber-neon">Store</button>
+            <button onclick="switchTab('about')" id="nav-about" class="text-gray-400 transition-all hover:text-cyber-neon pb-1 border-b-2 border-transparent">About Us</button>
+            <button onclick="switchTab('contact')" id="nav-contact" class="text-gray-400 transition-all hover:text-cyber-neon pb-1 border-b-2 border-transparent">Contact Us</button>
+        </nav>
+
+        <div class="flex items-center space-x-4">
+            <button onclick="toggleCart()" class="relative glass-panel px-4 py-2 rounded-xl flex items-center space-x-2 text-cyber-neon neon-border hover:bg-cyber-neon/10 transition-all">
+                <i class="fa-solid fa-cart-shopping text-xl"></i>
+                <span class="hidden sm:inline font-orbitron text-sm">Cart</span>
+                <span id="cart-badge" class="absolute -top-2 -right-2 bg-cyber-pink text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-bold shadow-lg">0</span>
+            </button>
+            <button class="md:hidden text-cyber-neon text-2xl p-2" onclick="toggleMobileMenu()">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </header>
+
+    <div id="mobile-menu" class="fixed inset-0 z-40 bg-cyber-dark/95 backdrop-blur-xl flex flex-col items-center justify-center space-y-8 text-2xl font-orbitron hidden">
+        <button onclick="switchTab('store'); toggleMobileMenu();" class="text-cyber-neon">Store</button>
+        <button onclick="switchTab('about'); toggleMobileMenu();" class="text-gray-300 hover:text-cyber-neon">About Us</button>
+        <button onclick="switchTab('contact'); toggleMobileMenu();" class="text-gray-300 hover:text-cyber-neon">Contact Us</button>
+        <button onclick="toggleMobileMenu()" class="absolute top-6 right-6 text-cyber-pink text-3xl"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <main class="pt-28 pb-20 px-4 sm:px-8 max-w-7xl mx-auto">
+        
+        <!-- STORE TAB -->
+        <div id="tab-store" class="space-y-16">
+            
+            <!-- Hero Section & 3D Interactive Slider -->
+            <section class="relative glass-panel rounded-3xl p-6 sm:p-12 overflow-hidden neon-border">
+                <div class="absolute -right-20 -bottom-20 w-96 h-96 bg-cyber-purple/20 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -left-20 -top-20 w-96 h-96 bg-cyber-neon/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                    <div class="lg:col-span-6 space-y-6">
+                        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyber-neon/10 border border-cyber-neon/30 text-cyber-neon text-sm font-semibold">
+                            <i class="fa-solid fa-bolt animate-bounce"></i>
+                            <span>QUANTUM GEN-IV HARDWARE</span>
+                        </div>
+                        <h1 class="font-orbitron text-4xl sm:text-6xl font-black tracking-tight leading-tight">
+                            FUTURE <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyber-neon to-cyber-pink">GADGETS</span> UNLOCKED
+                        </h1>
+                        <p class="text-gray-300 text-lg sm:text-xl font-medium leading-relaxed">
+                            Experience next-generation tactile technology. Engineered with quantum processors, holographic displays, and neural interfaces. Enjoy an exclusive <span class="text-cyber-accent font-bold">5% to 10% discount</span> across all flagship gadgets today! Prices in Indian Rupees (₹).
+                        </p>
+                        <div class="flex flex-wrap gap-4 pt-2">
+                            <a href="#catalog" class="px-8 py-4 bg-gradient-to-r from-cyber-neon to-cyber-purple text-black font-orbitron font-bold rounded-xl shadow-lg shadow-cyber-neon/30 hover:scale-105 transition-all flex items-center space-x-2">
+                                <span>EXPLORE CATALOG</span>
+                                <i class="fa-solid fa-arrow-down"></i>
+                            </a>
+                            <div class="px-6 py-4 glass-panel rounded-xl border border-cyber-neon/30 flex items-center space-x-3">
+                                <i class="fa-solid fa-tag text-cyber-accent text-xl"></i>
+                                <div>
+                                    <div class="text-xs text-gray-400 uppercase font-orbitron">Promo Applied</div>
+                                    <div class="font-bold text-cyber-accent font-orbitron">8% QUANTUM OFF</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5 Gadget Image Slider -->
+                    <div class="lg:col-span-6 relative">
+                        <div class="relative w-full h-[400px] sm:h-[480px] rounded-2xl overflow-hidden glass-panel border border-cyber-neon/40 shadow-2xl group">
+                            <div id="slider-container" class="w-full h-full relative">
+                                <!-- Slides injected via JS -->
+                            </div>
+                            
+                            <!-- Slider Controls -->
+                            <button onclick="prevSlide()" class="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full glass-panel flex items-center justify-center text-cyber-neon hover:bg-cyber-neon/20 transition-all z-10 neon-border">
+                                <i class="fa-solid fa-chevron-left text-xl"></i>
+                            </button>
+                            <button onclick="nextSlide()" class="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full glass-panel flex items-center justify-center text-cyber-neon hover:bg-cyber-neon/20 transition-all z-10 neon-border">
+                                <i class="fa-solid fa-chevron-right text-xl"></i>
+                            </button>
+
+                            <!-- Slider Indicators -->
+                            <div id="slider-indicators" class="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
+                                <!-- Dots injected via JS -->
+                            </div>
+
+                            <!-- Active Badge -->
+                            <div class="absolute top-4 right-4 bg-cyber-dark/80 backdrop-blur-md px-3 py-1 rounded-lg border border-cyber-neon/30 text-cyber-neon font-orbitron text-xs">
+                                <span id="slider-counter">01 / 05</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="catalog" class="space-y-8 pt-10">
+                <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                    <div>
+                        <span class="text-cyber-neon font-orbitron text-sm uppercase tracking-widest">SECURE INVENTORY</span>
+                        <h2 class="font-orbitron text-3xl sm:text-4xl font-extrabold mt-1">FEATURED HARDWARE</h2>
+                    </div>
+                    <div class="text-gray-400 font-medium">
+                        Showing 5 Premium Electronic Gadgets (Prices in ₹ with 5% to 10% Discounts)
+                    </div>
+                </div>
+
+                <div id="products-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Products rendered via JS -->
+                </div>
+            </section>
+        </div>
+
+        <!-- ABOUT TAB -->
+        <div id="tab-about" class="space-y-12 hidden">
+            <section class="glass-panel rounded-3xl p-8 sm:p-16 neon-border space-y-8">
+                <div class="max-w-3xl space-y-4">
+                    <span class="text-cyber-neon font-orbitron text-sm uppercase tracking-widest">ORIGIN STORY</span>
+                    <h1 class="font-orbitron text-4xl sm:text-6xl font-black">ABOUT CYBERPULSE</h1>
+                    <p class="text-gray-300 text-lg leading-relaxed">
+                        Founded in the nexus of advanced cybernetic engineering, CYBERPULSE is India's premier luxury provider of high-tier quantum electronic hardware. We bridge the gap between imagination and reality by supplying elite tech enthusiasts, innovators, and digital pioneers with cutting-edge gear.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
+                    <div class="glass-panel p-6 rounded-2xl border border-cyber-neon/20 space-y-3">
+                        <div class="w-12 h-12 rounded-xl bg-cyber-neon/10 flex items-center justify-center text-cyber-neon text-2xl">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <h3 class="font-orbitron text-xl font-bold">Quantum Grade</h3>
+                        <p class="text-gray-400">All devices are forged with military-grade resilience and sub-atomic processors.</p>
+                    </div>
+                    <div class="glass-panel p-6 rounded-2xl border border-cyber-purple/30 space-y-3">
+                        <div class="w-12 h-12 rounded-xl bg-cyber-purple/10 flex items-center justify-center text-cyber-purple text-2xl">
+                            <i class="fa-solid fa-truck-fast"></i>
+                        </div>
+                        <h3 class="font-orbitron text-xl font-bold">Instant Teleport Dispatch</h3>
+                        <p class="text-gray-400">Nationwide delivery network across India ensures your gadgets arrive instantly.</p>
+                    </div>
+                    <div class="glass-panel p-6 rounded-2xl border border-cyber-pink/30 space-y-3">
+                        <div class="w-12 h-12 rounded-xl bg-cyber-pink/10 flex items-center justify-center text-cyber-pink text-2xl">
+                            <i class="fa-solid fa-headset"></i>
+                        </div>
+                        <h3 class="font-orbitron text-xl font-bold">24/7 Neural Support</h3>
+                        <p class="text-gray-400">Direct neural-link customer care ready to assist your hardware configurations anytime.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- CONTACT TAB -->
+        <div id="tab-contact" class="space-y-12 hidden">
+            <section class="glass-panel rounded-3xl p-8 sm:p-16 neon-border max-w-4xl mx-auto space-y-8">
+                <div class="text-center space-y-3">
+                    <span class="text-cyber-neon font-orbitron text-sm uppercase tracking-widest">ESTABLISH CONNECTION</span>
+                    <h1 class="font-orbitron text-4xl sm:text-5xl font-black">CONTACT US</h1>
+                    <p class="text-gray-300">Have questions about our quantum electronics or need custom hardware builds? Reach out directly.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                    <div class="space-y-6">
+                        <div class="glass-panel p-6 rounded-2xl border border-cyber-neon/20 flex items-start space-x-4">
+                            <div class="text-cyber-neon text-2xl mt-1"><i class="fa-solid fa-envelope"></i></div>
+                            <div>
+                                <div class="text-xs text-gray-400 font-orbitron uppercase">Primary Neural Mail</div>
+                                <a href="mailto:malvikavya10@gmail.com" class="text-lg font-bold text-cyber-neon hover:underline">malvikavya10@gmail.com</a>
+                            </div>
+                        </div>
+                        <div class="glass-panel p-6 rounded-2xl border border-cyber-purple/20 flex items-start space-x-4">
+                            <div class="text-cyber-purple text-2xl mt-1"><i class="fa-solid fa-location-dot"></i></div>
+                            <div>
+                                <div class="text-xs text-gray-400 font-orbitron uppercase">Headquarters</div>
+                                <div class="text-lg font-bold text-gray-200">Sector 7, Neo-Silicon Grid, India</div>
+                            </div>
+                        </div>
+                        <div class="glass-panel p-6 rounded-2xl border border-cyber-pink/20 flex items-start space-x-4">
+                            <div class="text-cyber-pink text-2xl mt-1"><i class="fa-solid fa-clock"></i></div>
+                            <div>
+                                <div class="text-xs text-gray-400 font-orbitron uppercase">Operating Hours</div>
+                                <div class="text-lg font-bold text-gray-200">Always Online (24/7/365)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form onsubmit="handleContactSubmit(event)" class="glass-panel p-8 rounded-2xl border border-cyber-neon/30 space-y-4">
+                        <div>
+                            <label class="block text-xs font-orbitron uppercase text-gray-300 mb-1">Your Alias</label>
+                            <input type="text" required class="w-full bg-cyber-dark/90 border border-cyber-neon/30 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyber-neon transition-all" placeholder="Enter cyber handle...">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-orbitron uppercase text-gray-300 mb-1">Neural Mail</label>
+                            <input type="email" required class="w-full bg-cyber-dark/90 border border-cyber-neon/30 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyber-neon transition-all" placeholder="name@domain.com">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-orbitron uppercase text-gray-300 mb-1">Transmission Message</label>
+                            <textarea rows="4" required class="w-full bg-cyber-dark/90 border border-cyber-neon/30 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyber-neon transition-all resize-none" placeholder="Type message..."></textarea>
+                        </div>
+                        <button type="submit" class="w-full py-4 bg-gradient-to-r from-cyber-neon to-cyber-purple text-black font-orbitron font-bold rounded-xl shadow-lg hover:opacity-90 transition-all">
+                            TRANSMIT MESSAGE
+                        </button>
+                    </form>
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <div id="cart-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex justify-end">
+        <div class="w-full max-w-md bg-cyber-dark border-l border-cyber-neon/30 h-full flex flex-col p-6 shadow-2xl">
+            <div class="flex items-center justify-between pb-6 border-b border-gray-800">
+                <div class="flex items-center space-x-3">
+                    <i class="fa-solid fa-cart-shopping text-cyber-neon text-xl"></i>
+                    <h2 class="font-orbitron text-xl font-bold">YOUR QUANTUM CART</h2>
+                </div>
+                <button onclick="toggleCart()" class="text-gray-400 hover:text-cyber-pink text-2xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Cart Items List -->
+            <div id="cart-items" class="flex-1 overflow-y-auto py-6 space-y-4">
+                <!-- Items populated via JS -->
+            </div>
+
+            <!-- Cart Footer -->
+            <div id="cart-footer" class="pt-6 border-t border-gray-800 space-y-4">
+                <div class="flex justify-between text-sm text-gray-400">
+                    <span>Discount (Applied)</span>
+                    <span id="cart-discount-val" class="text-cyber-accent font-bold">₹0.00</span>
+                </div>
+                <div class="flex justify-between font-orbitron text-xl font-black">
+                    <span>TOTAL:</span>
+                    <span id="cart-total" class="text-cyber-neon">₹0.00</span>
+                </div>
+                <button onclick="checkout()" class="w-full py-4 bg-gradient-to-r from-cyber-neon to-cyber-pink text-black font-orbitron font-extrabold rounded-xl shadow-lg hover:opacity-90 transition-all">
+                    PROCEED TO CHECKOUT
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-6 right-6 z-50 glass-panel border border-cyber-neon px-6 py-4 rounded-xl shadow-2xl transform translate-y-32 opacity-0 transition-all duration-300 flex items-center space-x-3">
+        <i class="fa-solid fa-circle-check text-cyber-accent text-xl"></i>
+        <span id="toast-msg" class="font-orbitron text-sm font-semibold">Item added to quantum cart!</span>
+    </div>
+
+    <footer class="border-t border-cyber-neon/20 py-8 text-center text-gray-500 font-orbitron text-xs">
+        <p>&copy; 2026 CYBERPULSE LUXURY ELECTRONICS. ALL RIGHTS RESERVED. INQUIRIES: <a href="mailto:malvikavya10@gmail.com" class="text-cyber-neon hover:underline">malvikavya10@gmail.com</a></p>
+    </footer>
+
+    <script>
+        const gadgets = [
+            {
+                id: 1,
+                name: "Quantum Neural Visor X1",
+                category: "Holographic Wearable",
+                price: 74999.00,
+                discount: 10, // 10% off
+                image: "https://placehold.co/800x600/0f1019/00f0ff?text=Quantum+Neural+Visor",
+                desc: "Full retinal projection holographic visor equipped with quantum AI assistant and zero-latency neural link."
+            },
+            {
+                id: 2,
+                name: "CyberDeck Nano-Pad Pro",
+                category: "Portable Terminal",
+                price: 109999.00,
+                discount: 8, // 8% off
+                image: "https://placehold.co/800x600/0f1019/7000ff?text=CyberDeck+Terminal",
+                desc: "Flexible organic LED touchscreen workstation built into a titanium chassis with quantum encryption."
+            },
+            {
+                id: 3,
+                name: "PulseWave Sonic Ear-Pods",
+                category: "Acoustic Implant",
+                price: 24999.00,
+                discount: 5, // 5% off
+                image: "https://placehold.co/800x600/0f1019/ff007f?text=PulseWave+Ear-Pods",
+                desc: "Active neural noise cancellation with spatial holographic audio mapping and infinite kinetic charging."
+            },
+            {
+                id: 4,
+                name: "Apex Cybernetic Drone MK-IV",
+                category: "Autonomous Scout",
+                price: 134999.00,
+                discount: 10, // 10% off
+                image: "https://placehold.co/800x600/0f1019/39ff14?text=Apex+Cyber+Drone",
+                desc: "Stealth autonomous drone featuring thermal imaging, LIDAR mapping, and dual quantum rotors."
+            },
+            {
+                id: 5,
+                name: "Plasma Quantum Smart Watch",
+                category: "Wrist Communicator",
+                price: 39999.00,
+                discount: 7, // 7% off
+                image: "https://placehold.co/800x600/0f1019/00ffff?text=Plasma+Smart+Watch",
+                desc: "Holographic timepiece projecting biometric readouts and secure comm-channels directly above your wrist."
+            }
+        ];
+
+        let cart = [];
+        let currentSlideIndex = 0;
+        let slideInterval;
+
+        window.onload = function() {
+            initThreeBackground();
+            initSlider();
+            renderCatalog();
+            updateCartUI();
+            startAutoSlide();
+        };
+
+        function initThreeBackground() {
+            const canvas = document.getElementById('bg-canvas');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            const particlesGeometry = new THREE.BufferGeometry();
+            const particlesCount = 1500;
+            const posArray = new Float32Array(particlesCount * 3);
+
+            for(let i = 0; i < particlesCount * 3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 50;
+            }
+
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            
+            const particlesMaterial = new THREE.PointsMaterial({
+                size: 0.08,
+                color: 0x00f0ff,
+                transparent: true,
+                opacity: 0.8
+            });
+
+            const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+            scene.add(particlesMesh);
+
+            camera.position.z = 15;
+
+            let mouseX = 0;
+            let mouseY = 0;
+            window.addEventListener('mousemove', (e) => {
+                mouseX = (e.clientX - window.innerWidth / 2) * 0.0005;
+                mouseY = (e.clientY - window.innerHeight / 2) * 0.0005;
+            });
+
+            function animate() {
+                requestAnimationFrame(animate);
+                particlesMesh.rotation.y += 0.001 + mouseX;
+                particlesMesh.rotation.x += 0.0008 + mouseY;
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+
+        function initSlider() {
+            const container = document.getElementById('slider-container');
+            const indicators = document.getElementById('slider-indicators');
+            
+            container.innerHTML = '';
+            indicators.innerHTML = '';
+
+            gadgets.forEach((gadget, index) => {
+                const slide = document.createElement('div');
+                slide.className = `absolute inset-0 transition-opacity duration-700 ease-in-out flex flex-col justify-end p-6 sm:p-8 bg-cover bg-center ${index === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0'}`;
+                slide.style.backgroundImage = `linear-gradient(to top, rgba(5,5,8,0.95), rgba(5,5,8,0.2)), url('${gadget.image}')`;
+                
+                const finalPrice = (gadget.price * (1 - gadget.discount / 100)).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+                const origPrice = gadget.price.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+
+                slide.innerHTML = `
+                    <div class="space-y-2">
+                        <span class="px-3 py-1 rounded-full bg-cyber-neon/20 border border-cyber-neon/40 text-cyber-neon text-xs font-orbitron uppercase">${gadget.category}</span>
+                        <h3 class="font-orbitron text-2xl sm:text-3xl font-extrabold text-white">${gadget.name}</h3>
+                        <p class="text-gray-300 text-sm line-clamp-2">${gadget.desc}</p>
+                        <div class="flex items-center justify-between pt-2">
+                            <div class="flex items-center space-x-3">
+                                <span class="font-orbitron text-2xl font-black text-cyber-neon">₹${finalPrice}</span>
+                                <span class="text-gray-500 line-through text-sm">₹${origPrice}</span>
+                                <span class="bg-cyber-pink/20 text-cyber-pink text-xs px-2 py-0.5 rounded font-bold">-${gadget.discount}%</span>
+                            </div>
+                            <button onclick="addToCart(${gadget.id})" class="px-4 py-2 bg-cyber-neon text-black font-orbitron font-bold text-sm rounded-lg hover:bg-white transition-all shadow-lg shadow-cyber-neon/30">
+                                <i class="fa-solid fa-cart-plus mr-1"></i> ADD
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(slide);
+
+                const dot = document.createElement('button');
+                dot.className = `w-3 h-3 rounded-full transition-all ${index === 0 ? 'bg-cyber-neon w-8' : 'bg-gray-600 hover:bg-gray-400'}`;
+                dot.onclick = () => goToSlide(index);
+                indicators.appendChild(dot);
+            });
+        }
+
+        function showSlide(index) {
+            const slides = document.getElementById('slider-container').children;
+            const indicators = document.getElementById('slider-indicators').children;
+
+            for(let i = 0; i < slides.length; i++) {
+                slides[i].className = `absolute inset-0 transition-opacity duration-700 ease-in-out flex flex-col justify-end p-6 sm:p-8 bg-cover bg-center ${i === index ? 'opacity-100 z-10' : 'opacity-0 z-0'}`;
+                indicators[i].className = `w-3 h-3 rounded-full transition-all ${i === index ? 'bg-cyber-neon w-8' : 'bg-gray-600 hover:bg-gray-400'}`;
+            }
+            document.getElementById('slider-counter').innerText = `0${index + 1} / 05`;
+            currentSlideIndex = index;
+        }
+
+        function nextSlide() {
+            currentSlideIndex = (currentSlideIndex + 1) % gadgets.length;
+            showSlide(currentSlideIndex);
+            resetAutoSlide();
+        }
+
+        function prevSlide() {
+            currentSlideIndex = (currentSlideIndex - 1 + gadgets.length) % gadgets.length;
+            showSlide(currentSlideIndex);
+            resetAutoSlide();
+        }
+
+        function goToSlide(index) {
+            currentSlideIndex = index;
+            showSlide(currentSlideIndex);
+            resetAutoSlide();
+        }
+
+        function startAutoSlide() {
+            slideInterval = setInterval(nextSlide, 5000);
+        }
+
+        function resetAutoSlide() {
+            clearInterval(slideInterval);
+            startAutoSlide();
+        }
+
+        function renderCatalog() {
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = '';
+
+            gadgets.forEach(gadget => {
+                const finalPrice = (gadget.price * (1 - gadget.discount / 100)).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+                const origPrice = gadget.price.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+                const card = document.createElement('div');
+                card.className = 'glass-panel rounded-2xl overflow-hidden neon-border flex flex-col justify-between group hover:-translate-y-2 transition-all duration-300';
+
+                card.innerHTML = `
+                    <div>
+                        <div class="relative h-60 overflow-hidden bg-cyber-dark/50">
+                            <img src="${gadget.image}" alt="${gadget.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://placehold.co/800x600/0f1019/00f0ff?text=Electronic+Gadget'">
+                            <div class="absolute top-4 left-4 bg-cyber-dark/80 backdrop-blur-md px-3 py-1 rounded-lg border border-cyber-neon/30 text-cyber-neon text-xs font-orbitron uppercase">
+                                ${gadget.category}
+                            </div>
+                            <div class="absolute top-4 right-4 bg-cyber-pink text-white text-xs px-2.5 py-1 rounded-lg font-orbitron font-bold shadow-lg">
+                                -${gadget.discount}% OFF
+                            </div>
+                        </div>
+                        <div class="p-6 space-y-3">
+                            <h3 class="font-orbitron text-xl font-bold text-white group-hover:text-cyber-neon transition-colors">${gadget.name}</h3>
+                            <p class="text-gray-400 text-sm leading-relaxed">${gadget.desc}</p>
+                        </div>
+                    </div>
+                    <div class="p-6 pt-0 flex items-center justify-between">
+                        <div>
+                            <div class="text-xs text-gray-500 uppercase font-orbitron">Quantum Price</div>
+                            <div class="flex items-center space-x-2">
+                                <span class="font-orbitron text-xl font-black text-cyber-neon">₹${finalPrice}</span>
+                                <span class="text-gray-500 line-through text-xs">₹${origPrice}</span>
+                            </div>
+                        </div>
+                        <button onclick="addToCart(${gadget.id})" class="px-5 py-3 bg-gradient-to-r from-cyber-neon to-cyber-purple text-black font-orbitron font-bold text-sm rounded-xl hover:scale-105 transition-all shadow-lg shadow-cyber-neon/20 flex items-center space-x-2">
+                            <i class="fa-solid fa-cart-plus"></i>
+                            <span>ACQUIRE</span>
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function addToCart(id) {
+            const gadget = gadgets.find(g => g.id === id);
+            const existing = cart.find(item => item.id === id);
+
+            if(existing) {
+                existing.qty += 1;
+            } else {
+                cart.push({ ...gadget, qty: 1 });
+            }
+
+            updateCartUI();
+            showToast(`Acquired: ${gadget.name}`);
+        }
+
+        function removeFromCart(id) {
+            cart = cart.filter(item => item.id !== id);
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const badge = document.getElementById('cart-badge');
+            const itemsContainer = document.getElementById('cart-items');
+            const totalEl = document.getElementById('cart-total');
+            const discountValEl = document.getElementById('cart-discount-val');
+
+            const totalCount = cart.reduce((sum, item) => sum + item.qty, 0);
+            badge.innerText = totalCount;
+
+            if(cart.length === 0) {
+                itemsContainer.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-center text-gray-500 space-y-4">
+                        <i class="fa-solid fa-cart-arrow-down text-5xl text-gray-600"></i>
+                        <p class="font-orbitron text-sm">Your quantum cart is currently empty.</p>
+                    </div>
+                `;
+                totalEl.innerText = '₹0.00';
+                discountValEl.innerText = '₹0.00';
+                return;
+            }
+
+            itemsContainer.innerHTML = '';
+            let rawTotal = 0;
+            let discountedTotal = 0;
+
+            cart.forEach(item => {
+                const itemFinalPrice = item.price * (1 - item.discount / 100);
+                rawTotal += item.price * item.qty;
+                discountedTotal += itemFinalPrice * item.qty;
+
+                const div = document.createElement('div');
+                div.className = 'glass-panel p-4 rounded-xl border border-cyber-neon/20 flex items-center justify-between';
+                div.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <img src="${item.image}" alt="${item.name}" class="w-14 h-14 object-cover rounded-lg border border-cyber-neon/30">
+                        <div>
+                            <h4 class="font-orbitron text-sm font-bold text-white">${item.name}</h4>
+                            <div class="text-xs text-cyber-neon font-bold">₹${itemFinalPrice.toLocaleString('en-IN', { maximumFractionDigits: 2 })} x ${item.qty}</div>
+                        </div>
+                    </div>
+                    <button onclick="removeFromCart(${item.id})" class="text-gray-400 hover:text-cyber-pink text-lg p-2"><i class="fa-solid fa-trash"></i></button>
+                `;
+                itemsContainer.appendChild(div);
+            });
+
+            const savedAmount = rawTotal - discountedTotal;
+            discountValEl.innerText = `-₹${savedAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+            totalEl.innerText = `₹${discountedTotal.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+        }
+
+        function toggleCart() {
+            const modal = document.getElementById('cart-modal');
+            modal.classList.toggle('hidden');
+        }
+
+        function checkout() {
+            if(cart.length === 0) {
+                showToast("Cart is empty!");
+                return;
+            }
+            showToast("Quantum checkout completed successfully!");
+            cart = [];
+            updateCartUI();
+            toggleCart();
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            toastMsg.innerText = msg;
+            toast.classList.remove('translate-y-32', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-32', 'opacity-0');
+            }, 3000);
+        }
+
+        function switchTab(tabName) {
+            const tabs = ['store', 'about', 'contact'];
+            tabs.forEach(t => {
+                const el = document.getElementById(`tab-${t}`);
+                const navBtn = document.getElementById(`nav-${t}`);
+                if(t === tabName) {
+                    el.classList.remove('hidden');
+                    if(navBtn) {
+                        navBtn.className = "text-cyber-neon transition-all hover:text-white pb-1 border-b-2 border-cyber-neon";
+                    }
+                } else {
+                    el.classList.add('hidden');
+                    if(navBtn) {
+                        navBtn.className = "text-gray-400 transition-all hover:text-cyber-neon pb-1 border-b-2 border-transparent";
+                    }
+                }
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        function handleContactSubmit(e) {
+            e.preventDefault();
+            showToast("Transmission sent to malvikavya10@gmail.com!");
+            e.target.reset();
+        }
+    </script>
+</body>
+</html>
